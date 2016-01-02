@@ -1,0 +1,40 @@
+<div>
+    <table class="table">
+        <thead>
+            <th class="span3">User</th>
+            <th>Tickets</th>
+        </thead>
+        <tbody>
+            <tr ng-repeat="item in users">
+                <td>
+                    <a href="user/{{ item.username }}/">@{{ item.username }}</a>
+                </td>
+                <td>
+                    <div class="expandable-target">
+                        <div class="pull-left">
+                            <ul class="list-inline">
+                                <li ng-repeat="ticket in item.tickets | limitTo: 5">
+                                    <a href="ticket/{{ticket}}">#{{ticket}}</a>
+                                </li>
+                                <li ng-if="item.tickets.length > 5">and {{ item.tickets.length - 5 }} more</li>
+                            </ul>
+                        </div>
+                        <div class="pull-right">
+                            <button ng-click="toggleExpand('expand', $event)"
+                                    class="btn btn-default btn-xs">Expand</button>
+                        </div>
+                    </div>
+                    <div class="expandable-target">
+                        <p ng-repeat="ticket in item.tickets">
+                            [<a href="ticket/{{ ticket }}">#{{ ticket }}</a> / [[queue]]{{ ticket.queue }}]
+                            {{ ticket.title }}
+                            {{ ticket.time_spent }}
+                            <button ng-if="$first" ng-click="toggleExpand('collapse', $event)"
+                                    class="pull-right btn btn-default btn-xs">Collapse</button>
+                        </p>
+                    </div>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

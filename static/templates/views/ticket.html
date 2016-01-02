@@ -1,0 +1,27 @@
+<div>
+    <h3>[<a href="https://iponweb.net/rt/Ticket/Display.html?id={{ctrl.ticketId}}" target="_blank">#{{ ctrl.ticketId }}</a>]
+        {{ ctrl.ticketData.subject }}
+        ({{ ctrl.ticketData.queue }})</h3>
+
+    <p>Total time spent: {{ ctrl.totalSpent }}</p>
+
+    <div class="col-md-5">
+        <table class="table">
+            <thead>
+            <th class="col-md-5">User</th>
+            <th class="col-md-7">Time Spent</th>
+            </thead>
+            <tbody>
+            <tr ng-repeat="item in ctrl.ticketData.users">
+                <td>
+                    <a href="user/{{item.name}}">@{{ item.name }}</a>
+                </td>
+                <td>
+                    {{ item.time_spent }}
+                </td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div class="col-md-7" highcharts-plot params="ctrl.plotParams"></div>
+</div>

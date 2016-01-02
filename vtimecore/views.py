@@ -1,4 +1,5 @@
 from collections import defaultdict
+from django.shortcuts import render
 from itertools import groupby
 from operator import itemgetter
 import json
@@ -9,6 +10,8 @@ import humanfriendly
 
 from vtimecore.models import Record, Team
 from vtimecore.forms import ByTeamForm, ByTicketForm
+
+import sys
 
 
 class SetEncoder(json.JSONEncoder):
@@ -81,16 +84,24 @@ def by_ticket(request):
 
 
 def index(request):
-    f = ByTeamForm(request.GET)
+    if not request.POST:
+        params = {
+        }
+        return render(request, 'index.html', params)
+    else:
+        f = ByTeamForm(request.POST)
 
     if not f.is_valid():
-        return HttpResponse(status=400)
+        return HttpResponse("Invalid arguments", status=400)
 
     r = f.cleaned_data
     team_id = r['team_id'] or 1
 
     teams = Team.objects.values_list('id', 'name', 'members__username')
     teams = sorted(teams, key=itemgetter(0, 1))
+
+    if not len(teams):
+        return HttpResponse("There are no teams created yet", status=404)
 
     requested_members = []
     t = []
