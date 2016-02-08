@@ -1,3 +1,5 @@
 db.sqlite3
+db.sqlite3-journal
+.idea
 __pycache__/*
 *.pyc

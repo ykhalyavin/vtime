@@ -1,0 +1,19 @@
+<div>
+	<h3>{{ ctrl.username }}</h3>
+
+    <table class="table">
+        <thead>
+        <th>RT</th>
+        <th>Subject</th>
+        <th>Time Spent</th>
+        <th>Queue</th>
+        </thead>
+        <tr ng-repeat="(id, item) in ctrl.data">
+            <td>[<a href="https://iponweb.net/rt/Ticket/Display.html?id={{id}}" target="_blank">#{{id}}</a>]</td>
+            <td>{{item.subject}}</td>
+            <td class="col-md-2">{{item.time_spent}}</td>
+            <td>{{item.queue}}</td>
+        </tr>
+    </table>
+    <div highcharts-plot params="ctrl.plotParams"></div>
+</div>
