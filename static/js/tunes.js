@@ -12,5 +12,5 @@
             borderWidth: 1,
             shadow: {color: "#AAA", width: 2}
         }
-    })
+    });
 })();

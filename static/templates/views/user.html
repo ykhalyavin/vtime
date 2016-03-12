@@ -1,19 +1,26 @@
-<div>
-	<h3>{{ ctrl.username }}</h3>
+<script type="text/ng-template"  id="user_table_ticket_column">
+    <a href="ticket/{{ rec[col.name] }}/">#{{ rec[col.name] }}</a> |
+    <a href="https://iponweb.net/rt/Ticket/Display.html?id={{ rec[col.name] }}"
+       target="_blank">RT</a>
+</script>
 
-    <table class="table">
-        <thead>
-        <th>RT</th>
-        <th>Subject</th>
-        <th>Time Spent</th>
-        <th>Queue</th>
-        </thead>
-        <tr ng-repeat="(id, item) in ctrl.data">
-            <td>[<a href="https://iponweb.net/rt/Ticket/Display.html?id={{id}}" target="_blank">#{{id}}</a>]</td>
-            <td>{{item.subject}}</td>
-            <td class="col-md-2">{{item.time_spent}}</td>
-            <td>{{item.queue}}</td>
-        </tr>
-    </table>
-    <div highcharts-plot params="ctrl.plotParams"></div>
+<div class="page-header">
+    <h3>
+        User &#8220;{{ ctrl.objId }}&#8221; statistic
+        <span class="grey font-18px">(total: {{ ctrl.spent_hours }} hour(s))</span>
+    </h3>
+    <span class="grey" ng-show="ctrl.workhours">
+        Total working hours in {{ startDateStr }}: {{ ctrl.workhours }}
+    <span>
 </div>
+<div>
+    <div class="col-md-5">
+        <sortable-table columns="ctrl.tableColumns"
+                        sort-column="spent_hours"
+                        sort-desc="true"
+                        table-data="ctrl.data">
+        </sortable-table>
+    </div>
+    <div class="col-md-7" highcharts-plot params="ctrl.plotConf"></div>
+</div>
+

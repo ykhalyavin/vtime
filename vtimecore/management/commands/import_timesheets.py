@@ -1,7 +1,5 @@
 # coding: utf-8
-# from operator import itemgetter
 import os.path
-import sys
 from pathlib import Path
 from datetime import datetime
 
@@ -33,18 +31,15 @@ def parse_sheet(path):
         yield ticket, start_date, end_date, comment
 
 
-def parse_timesheets(*args):
-    if args[0]:
-        directory = args[0][0]
-    else:
-        directory = settings.SHEETS_DIR
-    files = sorted(str(f) for f in Path(directory).iterdir()
+def parse_timesheets():
+    files = sorted(str(f) for f in Path(settings.SHEETS_DIR).iterdir()
                    if f.is_file() and not f.parts[-1].startswith('.'))
 
     for path in files:
         username = os.path.split(path)[-1]
-        if args[0]:
-            print('processing ' + username)
+
+        print('processing ', username)
+
         mtime = datetime.fromtimestamp(os.path.getmtime(path))
 
         user, created = User.objects.get_or_create(
@@ -54,8 +49,17 @@ def parse_timesheets(*args):
             user.file_modified = mtime
             user.save()
 
+            Record.objects.filter(username=username).delete()
+
             records = []
+            dups = {}
             for ticket, start_date, end_date, comment in parse_sheet(path):
+                key = (start_date, end_date)
+                if key not in dups:
+                    dups[key] = True
+                else:
+                    continue
+
                 rec = Record(
                     username=username,
                     start_date=start_date,
@@ -70,4 +74,4 @@ def parse_timesheets(*args):
 
 class Command(BaseCommand):
     def handle(self, *args, **options):
-        parse_timesheets(args)
+        parse_timesheets()

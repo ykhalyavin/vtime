@@ -1,32 +1,40 @@
 (function() {
     'use strict';
 
-    var app = angular.module('timesheet', ['ngRoute']);
-    
-    app.controller('BaseCtrl', function($scope) {
-        //
-    });
-    
-    app.config(function($routeProvider, $locationProvider, $httpProvider) {
+    var app = angular.module('timesheet',
+                             ['ngRoute', 'ngSanitize', 'ui.select']);
+
+    app.config(['$routeProvider', '$locationProvider', '$httpProvider',
+                configProvider]);
+
+
+    function configProvider($routeProvider, $locationProvider, $httpProvider) {
         $routeProvider.when('/', {
-            templateUrl: 'static/templates/views/user_list.html',
-            controller: 'UsersCtrl',
+            controller: 'BaseCtrl',
             controllerAs: 'ctrl'
-        }).when('/users', {
-            templateUrl: 'static/templates/views/user_list.html',
-            controller: 'UsersCtrl',
+        }).when('/search/:query/?', {
+            controller: 'BaseCtrl',
             controllerAs: 'ctrl'
-        }).when('/tickets', {
+        }).when('/team/:teamSlug/users/?', {
+            templateUrl: 'static/templates/views/user_list.html',
+            controller: 'TeamCtrl',
+            controllerAs: 'ctrl',
+            resolve: {viewSlug: function () {return 'users';}}
+        }).when('/team/:teamSlug/tickets/?', {
             templateUrl: 'static/templates/views/ticket_list.html',
-            controller: 'TicketsCtrl',
-            controllerAs: 'ctrl'
-        }).when('/user/:username', {
+            controller: 'TeamCtrl',
+            controllerAs: 'ctrl',
+            resolve: {viewSlug: function () {return 'tickets';}}
+        }).when('/user/:username/?', {
             templateUrl: 'static/templates/views/user.html',
             controller: 'UserCtrl',
             controllerAs: 'ctrl'
-        }).when('/ticket/:ticketId', {
+        }).when('/ticket/:ticketId/?', {
             templateUrl: 'static/templates/views/ticket.html',
             controller: 'TicketCtrl',
+            controllerAs: 'ctrl'
+        }).otherwise({
+            controller: 'BaseCtrl',
             controllerAs: 'ctrl'
         });
         $locationProvider.html5Mode(true);
@@ -47,5 +55,5 @@
                 }
             };
         });
-    });
+    }
 })();

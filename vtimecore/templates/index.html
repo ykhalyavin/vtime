@@ -1,67 +1,117 @@
 <!DOCTYPE html>
-<html ng-app="timesheet">
+<html ng-app="timesheet" ng-strict-di>
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-	<base href="/">
+    <base href="/">
     <title>Timesheet Analytics</title>
-	<link rel="stylesheet" href="static/css/bootstrap.min.css" />
-	<link rel="stylesheet" href="static/css/bootstrap-theme.min.css" />
-	<link rel="stylesheet" href="static/css/bootstrap-sticky-footer.css" />
-	<link rel="stylesheet" href="static/css/custom.css" />
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.4/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.4.7/angular.min.js"></script>
-	<script src="static/js/angular-route.min.js"></script>
-	<script src="static/js/bootstrap.min.js"></script>
+    <link rel="stylesheet" href="static/css/vendors/bootstrap.min.css" />
+    <link rel="stylesheet" href="static/css/vendors/bootstrap-sticky-footer.css" />
+    <link rel="stylesheet" href="static/css/vendors/daterangepicker.css" />
+    <link rel="stylesheet" href="static/css/vendors/select.min.css" />
+    <link rel="stylesheet" href="static/css/custom.css" />
 
-	<script src="static/js/app.js"></script>
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+    <link rel="stylesheet" href="http://fk.github.io/select2-bootstrap-css/css/select2-bootstrap.css">
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
+    <script src="static/js/vendors/angular.min.js"></script>
+
+    <script src="static/js/vendors/angular-route.min.js"></script>
+    <script src="static/js/vendors/angular-sanitize.min.js"></script>
+    <script src="static/js/vendors/bootstrap.min.js"></script>
+    <script src="static/js/vendors/moment.min.js"></script>
+    <script src="static/js/vendors/jquery.daterangepicker.js"></script>
+
+    <script src="static/js/vendors/lodash.min.js"></script>
+    <script src="static/js/vendors/highcharts.min.js"></script>
+    <script src="static/js/vendors/select.js"></script>
+
+    <script>
+        window.TEAMS = [
+            {% for slug, name in teams %}
+                {slug: "{{ slug }}", name: "{{ name }}"},
+            {% endfor %}
+        ];
+        window.MINDATE = "{{ min_date }}";
+        window.MAXDATE = "{{ max_date }}";
+    </script>
+    <script src="static/js/app.js"></script>
+    <script src="static/js/services.js"></script>
     <script src="static/js/controllers.js"></script>
     <script src="static/js/directives.js"></script>
-    <script src="static/js/providers.js"></script>
+    <script src="static/js/tunes.js"></script>
 </head>
 <body ng-controller="BaseCtrl">
 
 {% csrf_token %}
 
-<!-- Static navbar -->
-<nav class="navbar navbar-default">
-    <div class="container-fluid">
-        <div class="navbar-header">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-            </button>
-            <a class="navbar-brand" href="/">Timesheet Analytics</a>
-        </div>
-        <div id="navbar" class="navbar-collapse collapse">
-            <ul class="nav navbar-nav">
-                <li><a href="users">Users</a></li>
-                <li><a href="tickets">Tickets</a></li>
-            </ul>
-        </div>
-    </div>
-</nav>
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed"
+                        data-toggle="collapse" data-target="#navbar"
+                        aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <span class="navbar-brand">Timesheets</a>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <div class="btn-group navbar-btn navbar-left">
+                    <button type="button" class="btn btn-default dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Filter by Team <span class="caret"></span>
+                    </button>
+                    <ul class="dropdown-menu">
+                        {% for slug, name in teams %}
+                            <li class="menu-item dropdown dropdown-submenu">
+                                <a href="#" class="dropdown-toggle" data-toggle="dropdown">{{ name }}</a>
+                                <ul class="dropdown-menu">
+                                    <li><a href="/team/{{ slug }}/users/">Users</a></li>
+                                    <li><a href="/team/{{ slug }}/tickets/">Tickets</a></li>
+                                </ul>
+                            </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <form class="navbar-form navbar-left">
+                    <button type="button" class="btn btn-default"
+                            calendar ng-model="ctrl"></button>
+                </form>
 
+                <form class="navbar-form navbar-left" role="search">
+                    {% verbatim %}
+                    <ui-select ng-model="query.selected"
+                               ng-disabled="disabled"
+                               on-select="searchItemSelected($item, $model)"
+                               reset-search-input="true"
+                               theme="select2"
+                               style="width: 200px;">
+                        <ui-select-match placeholder="Ticket or user">{{$select.selected.name}}</ui-select-match>
+                        <ui-select-choices repeat="row in searchResults"
+                                           refresh="search($select.search)"
+                                           refresh-delay="0">
+                            <div ng-bind-html="row.name | highlight: $select.search"></div>
+                        </ui-select-choices>
+                    </ui-select>
+                    {% endverbatim %}
+                </form>
+            </div>
+        </div>
+    </nav>
 
     <div class="container">
-        <div class="page-header">
-            <h1>Timesheet Analytics</h1>
-        </div>
-
         <ng-view></ng-view>
     </div>
 
     <footer class="footer">
       <div class="container">
-        <p class="text-muted">Timesheet Analytics <span class="pull-right">© IPONWEB, BSW-UI TEAM 2015</span></p>
+        <p class="text-muted">Timesheet Analytics <span class="pull-right">© IPONWEB, BSW-UI TEAM 2016</span></p>
       </div>
     </footer>
-
-    <script src="static/js/lodash.min.js"></script>
-    <script src="static/js/highcharts.min.js"></script>
-    <script src="static/js/tunes.js"></script>
 </body>
 </html>

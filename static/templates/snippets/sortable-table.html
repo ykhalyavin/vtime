@@ -1,0 +1,24 @@
+<table class="table">
+    <thead>
+        <th ng-repeat="col in columns">
+            <a class="pseudo pseudo__disabled-pointer"
+               ng-click="sort(col.name)">{{ col.desc }}</a>
+            <span class="glyphicon sorticon"
+                  aria-hidden="true"
+                  ng-class="{'glyphicon-sort-by-attributes': col.name === sortColumn,
+                             'glyphicon-sort-by-attributes-alt': sortDesc}"></span>
+        </td>
+    </thead>
+    <tbody>
+        <tr ng-repeat="rec in tableData | orderBy:sortColumn:sortDesc">
+            <td ng-repeat="col in columns">
+                <span ng-switch="col.template">
+                    <span ng-switch-when="undefined">{{ rec[col.name] }}</span>
+                    <span ng-switch-default>
+                        <span ng-include="col.template"></span>
+                    </span>
+                </span>
+            </td>
+        </tr>
+    </tbody>
+</table>

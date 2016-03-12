@@ -2,25 +2,31 @@
     'use strict';
 
     var path = 'mocks/';
-    
+
     angular.module('timesheet')
-        .directive('usersList', UsersList)
-        .directive('ticketsList', TicketsList)
+        .directive('calendar', ['Settings', '$location', Calendar])
+        .directive('sortableTable', SortableTable)
         .directive('highchartsPlot', HighchartsPlot);
 
-    function UsersList(Data) {
+    function SortableTable() {
         return {
-            templateUrl: 'static/templates/snippets/users.html',
-            link: function(scope, element) {
-                Data.get('2015-11-01', '2015-11-10').then(function(response) {
-                    scope.users = _.reduce(response.data.data_by_user, function(memo, item, key) {
-                        memo.push({
-                            username: key,
-                            tickets: item.tickets
-                        });
-                        return memo;
-                    }, []);
-                });
+            restrict: 'E',
+            scope: {
+                columns: '=',
+                tableData: '=',
+                sortColumn: '@',
+                sortDesc: '='
+            },
+            templateUrl: 'static/templates/snippets/sortable-table.html',
+            link: function(scope, element, attrs) {
+                scope.sort = function (columnName) {
+                    if (columnName == scope.sortColumn) {
+                        scope.sortDesc = !scope.sortDesc;
+                    } else {
+                        scope.sortColumn = columnName;
+                        scope.sortDesc = false;
+                    }
+                };
 
                 scope.toggleExpand = function(direction, e) {
                     var $e = $(e.target).closest('.expandable-target');
@@ -30,27 +36,58 @@
         };
     }
 
-    function TicketsList($http) {
+    function Calendar(Settings, $location) {
         return {
-            templateUrl: 'static/templates/snippets/tickets.html',
-            link: function(scope, element) {
-                $http.get(path + 'data_by_ticket.json?' + new Date()).then(function(response) {
-                    var users = _.reduce(response.data, function(memo, item, key) {
-                        memo.push({
-                            id: key,
-                            users: item.users
-                        });
-                        return memo;
-                    }, []);
-                    scope.tickets = users;
-                });
+            restrict: 'A',
+            require : 'ngModel',
+            link: function(scope, element, attrs, ngModelCtrl) {
+                var dates = Settings.dates;
 
-                scope.toggleExpand = function(direction, e) {
-                    var $e = $(e.target).closest('.expandable-target');
-                    $e.hide().siblings().show();
-                };
+                element.dateRangePicker(
+                {
+                    format: 'YYYY-MM-DD',
+                    startOfWeek: 'monday',
+                    autoClose: true,
+                    showShortcuts: true,
+                    separator: ' — ',
+                    shortcuts:
+                    {
+                        'prev': ['week', 'month'],
+                        'next-days': null,
+                        'next': null
+                    },
+                    getValue: function() {
+                        return this.innerHTML;
+                    },
+                    setValue: function(s) {
+                        this.innerHTML = s;
+                    },
+                    beforeShowDay: function(t) {
+                        var valid = (moment(t) >= moment(window.MINDATE) &&
+                                     moment(t) <= moment(window.MAXDATE));
+                        var _class = '';
+                        var _tooltip = valid ? '' : 'No records for this date';
+                        return [valid, _class, _tooltip];
+                    }
+                }).bind('datepicker-change', function(e, obj) {
+                    dates.startDate = moment(obj.date1).format('YYYY-MM-DD');
+                    dates.endDate = moment(obj.date2).format('YYYY-MM-DD');
+
+                    scope.$broadcast('calendarChanged', {
+                        startDate: dates.startDate,
+                        endDate: dates.endDate
+                    });
+
+                }).data().dateRangePicker.setDateRange(
+                    dates.startDate, dates.endDate
+                );
+
+                scope.$on('datesChanged', function () {
+                    element.data('dateRangePicker').setDateRange(
+                        dates.startDate, dates.endDate);
+                });
             }
-        }
+        };
     }
 
     function HighchartsPlot() {

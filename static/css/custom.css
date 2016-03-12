@@ -1,3 +1,74 @@
 * + .expandable-target {
     display: none;
 }
+
+.sorticon {
+    width: 20px;
+    opacity: 0;
+    transition: opacity 0.2s;
+}
+
+.sorticon.glyphicon-sort-by-attributes {
+    opacity: 1;
+}
+
+a.pseudo.pseudo__disabled-pointer {
+    cursor: pointer;
+    color: inherit;
+}
+
+a.pseudo {
+    border-bottom: 1px dotted #AAA;
+    padding-bottom: 0;
+    text-decoration: None;
+}
+
+.dropdown-header strong {
+    font-size: 14px;
+}
+
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu>.dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -6px;
+    margin-left: -1px;
+    border-radius: 4px;
+}
+
+.dropdown-submenu:hover > .dropdown-menu {
+    display:block;
+}
+
+.dropdown-submenu > a:after {
+    display: block;
+    content: " ";
+    float: right;
+    width: 0;
+    height: 0;
+    border-color: transparent;
+    border-style: solid;
+    border-width: 5px 0 5px 5px;
+    border-left-color: #cccccc;
+    margin-top: 5px;
+    margin-right: -10px;
+}
+.dropdown-submenu > a:hover:after {
+    border-left-color: black;
+}
+
+.dropdown-submenu > a.dropdown-toggle {
+    box-shadow: none !important;
+}
+
+.grey {
+    color: #AAA;
+}
+
+.font-18px {
+    font-size: 18px;
+    vertical-align: middle;
+}

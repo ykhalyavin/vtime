@@ -1,17 +1,16 @@
+from datetime import datetime
 from collections import defaultdict
 from django.shortcuts import render
-from itertools import groupby
-from operator import itemgetter
 import json
 
-from django.http import HttpResponse
+from django.db.models import Q, F, Max, Min
+from django.http import HttpResponse, Http404
 
-import humanfriendly
+from vtimecore.models import Record, Team, WorkHours, User
+from vtimecore.forms import ByTeamForm, ByTicketForm, ByUserForm
 
-from vtimecore.models import Record, Team
-from vtimecore.forms import ByTeamForm, ByTicketForm
 
-import sys
+PRECISION = 2
 
 
 class SetEncoder(json.JSONEncoder):
@@ -20,54 +19,147 @@ class SetEncoder(json.JSONEncoder):
             return list(obj)
 
 
-def data_by_ticket(ticket, start_date=None, end_date=None):
-    ret = {'time_spent_sec': 0, 'users': set()}
+def get_workhours(date):
+    try:
+        return WorkHours.objects.get(year=date.year, month=date.month).hours
+    except WorkHours.DoesNotExist:
+        return
 
-    qs = Record.objects.filter(ticket=ticket)
+
+def filter_dates(qs, start_date, end_date):
     if start_date and end_date:
-        qs = qs.filter(start_date__gte=start_date, end_date__lte=end_date)
+        qs = qs.filter(Q(start_date__gte=start_date) |
+                       Q(end_date__gte=start_date),
+                       Q(start_date__lte=end_date) |
+                       Q(end_date__lte=end_date))
+
+    return qs
+
+
+def maybe_fix_rec_dates(rec, start_date, end_date):
+    if rec.start_date < start_date:
+        rec.start_date = start_date
+    if rec.end_date > end_date:
+        rec.end_date = end_date
+
+
+def data_for_single_object(attr, attr_id, start_date=None, end_date=None):
+    assert attr in ['ticket', 'username']
+
+    type_by_attr = {'ticket': 'username', 'username': 'ticket'}
+
+    if start_date and end_date:
+        start_date = datetime.combine(start_date, datetime.min.time())
+        end_date = datetime.combine(end_date, datetime.max.time())
+
+    qs = Record.objects.filter(**{attr: attr_id})
+    qs = filter_dates(qs, start_date, end_date)
+
+    hours_by_attr = defaultdict(int)
+    total_hours_spent = 0
 
     for rec in qs.all():
-        spent_sec = (rec.end_date - rec.start_date).total_seconds()
+        maybe_fix_rec_dates(rec, start_date, end_date)
 
-        ret['time_spent_sec'] += spent_sec
-        ret['users'].add(rec.username)
+        spent_hours = (rec.end_date - rec.start_date).total_seconds() / 3600
+        total_hours_spent += spent_hours
 
-    ret['time_spent'] = humanfriendly.format_timespan(ret['time_spent_sec'])
-    ret['users'] = sorted(ret['users'])
+        attr_name = type_by_attr[attr]
+        hours_by_attr[getattr(rec, attr_name)] += spent_hours
 
-    return ret
+    return {
+        'spent_hours': round(total_hours_spent, PRECISION),
+        'data': [{'id': k, 'spent_hours': round(v, PRECISION)}
+                 for k, v in hours_by_attr.items()]
+    }
 
 
 def data_by_user(members, start_date, end_date):
-    qs = Record.objects.filter(username__in=members,
-                               start_date__gte=start_date,
-                               end_date__lte=end_date)
+    start_date = datetime.combine(start_date, datetime.min.time())
+    end_date = datetime.combine(end_date, datetime.max.time())
+
+    qs = Record.objects.filter(username__in=members)
+    qs = filter_dates(qs, start_date, end_date)
 
     data_by_user = {}
     for u in members:
         data_by_user[u] = {
-            'tickets': set(),
-            'time_spent_sec': 0,
-            'time_by_ticket': defaultdict(int),
-            'comments_by_ticket': defaultdict(list)
+            'spent_hours': 0,
+            'time_by_ticket_hours': defaultdict(int),
         }
 
     for rec in qs.all():
-        spent_sec = (rec.end_date - rec.start_date).total_seconds()
+        maybe_fix_rec_dates(rec, start_date, end_date)
 
         x = data_by_user[rec.username]
-        x['tickets'].add(rec.ticket)
-        x['time_spent_sec'] += spent_sec
-        x['time_by_ticket'][rec.ticket] += spent_sec
-        x['comments_by_ticket'][rec.ticket].append(rec.comment)
+        x['spent_hours'] += rec.spent_hours
+        x['time_by_ticket_hours'][rec.ticket] += rec.spent_hours
 
     for x in data_by_user.values():
-        x['time_spent_sec'] += spent_sec
-        x['time_spent'] = (
-                humanfriendly.format_timespan(x['time_spent_sec']))
+        x['spent_hours'] = round(x['spent_hours'], PRECISION)
+        x['tickets'] = [{'id': t, 'spent_hours': v}
+                        for t, v in sorted(x['time_by_ticket_hours'].items(),
+                                           key=lambda x: x[1], reverse=True)]
 
     return data_by_user
+
+
+def data_by_ticket(members, start_date, end_date):
+    start_date = datetime.combine(start_date, datetime.min.time())
+    end_date = datetime.combine(end_date, datetime.max.time())
+
+    qs = Record.objects.filter(username__in=members)
+    qs = filter_dates(qs, start_date, end_date)
+
+    data_by_ticket = {}
+    for t in qs.values_list('ticket', flat=True):
+        data_by_ticket[t] = {
+            'spent_hours': 0,
+            'time_by_user_hours': defaultdict(int)
+        }
+
+    for rec in qs.all():
+        maybe_fix_rec_dates(rec, start_date, end_date)
+
+        x = data_by_ticket[rec.ticket]
+        x['spent_hours'] += rec.spent_hours
+        x['time_by_user_hours'][rec.username] += rec.spent_hours
+
+    for x in data_by_ticket.values():
+        x['spent_hours'] = round(x['spent_hours'], PRECISION)
+        x['users'] = [{'username': u, 'spent_hours': v}
+                      for u, v in sorted(x['time_by_user_hours'].items(),
+                                         key=lambda x: x[1], reverse=True)]
+
+    return data_by_ticket
+
+
+def get_team_members(team_slug=None):
+    team_qs = Team.objects
+
+    team = None
+    if team_slug:
+        team = team_qs.filter(slug=team_slug).first()
+
+    if not team:
+        team = team_qs.first()
+
+    if not team:
+        raise Http404('There are no teams created yet')
+
+    return team.slug, team.members.values_list('username', flat=True)
+
+
+def index(request):
+    c = {
+        'teams': Team.objects.order_by('name').values_list('slug', 'name'),
+        'max_date': Record.objects.latest(
+            'start_date').end_date.strftime('%Y-%m-%d'),
+        'min_date': Record.objects.earliest(
+            'start_date').start_date.strftime('%Y-%m-%d')
+    }
+
+    return render(request, 'index.html', c)
 
 
 def by_ticket(request):
@@ -77,53 +169,90 @@ def by_ticket(request):
         return HttpResponse(status=400)
 
     r = f.cleaned_data
-    resp = data_by_ticket(r['ticket'], r['start_date'], r['end_date'])
+    resp = data_for_single_object('ticket', r['obj_id'], r['start_date'],
+                                  r['end_date'])
+    resp['workhours'] = get_workhours(r['start_date'])
 
     return HttpResponse(json.dumps(resp, cls=SetEncoder),
                         content_type='application/json')
 
 
-def index(request):
-    if not request.POST:
-        params = {
-        }
-        return render(request, 'index.html', params)
-    else:
-        f = ByTeamForm(request.POST)
+def by_user(request):
+    f = ByUserForm(request.GET)
 
     if not f.is_valid():
-        return HttpResponse("Invalid arguments", status=400)
+        return HttpResponse(status=400)
 
     r = f.cleaned_data
-    team_id = r['team_id'] or 1
-
-    teams = Team.objects.values_list('id', 'name', 'members__username')
-    teams = sorted(teams, key=itemgetter(0, 1))
-
-    if not len(teams):
-        return HttpResponse("There are no teams created yet", status=404)
-
-    requested_members = []
-    t = []
-    for (_id, name), data in groupby(teams, itemgetter(0, 1)):
-        members = [x[-1] for x in data]
-
-        active = False
-        if _id == team_id:
-            requested_members = members
-            active = True
-
-        t.append({'id': _id, 'name': name, 'members': members,
-                  'active': active})
-
-    if not requested_members:
-        return HttpResponse(status=404)
-
-    resp = {
-        'teams': t,
-        'data_by_user': data_by_user(requested_members,
-                                     r['start_date'], r['end_date'])
-    }
+    resp = data_for_single_object('username', r['obj_id'], r['start_date'],
+                                  r['end_date'])
+    resp['workhours'] = get_workhours(r['start_date'])
 
     return HttpResponse(json.dumps(resp, cls=SetEncoder),
+                        content_type='application/json')
+
+
+def team_users(request):
+    f = ByTeamForm(request.GET)
+    if not f.is_valid():
+        return HttpResponse('Invalid arguments', status=400)
+
+    r = f.cleaned_data
+    t, members = get_team_members(r['team_slug'])
+
+    users = []
+    for k, v in data_by_user(members, r['start_date'], r['end_date']).items():
+        v['username'] = k
+        users.append(v)
+
+    resp = {'data': users, 'workhours': get_workhours(r['start_date'])}
+    return HttpResponse(json.dumps(resp, cls=SetEncoder),
+                        content_type='application/json')
+
+
+def team_tickets(request):
+    f = ByTeamForm(request.GET)
+    if not f.is_valid():
+        return HttpResponse('Invalid arguments', status=400)
+
+    r = f.cleaned_data
+    t, members = get_team_members(r['team_slug'])
+
+    tickets = []
+    data = data_by_ticket(members, r['start_date'], r['end_date'])
+    for k, v in sorted(data.items(),
+                       key=lambda x: x[1]['spent_hours'],
+                       reverse=True):
+        v['ticket'] = k
+        tickets.append(v)
+
+    resp = {'data': tickets, 'workhours': get_workhours(r['start_date'])}
+    return HttpResponse(json.dumps(resp, cls=SetEncoder),
+                        content_type='application/json')
+
+
+def user_search(request, query):
+    if not query or len(query) < 2:
+        values = []
+    else:
+        values = User.objects.filter(
+            username__icontains=query
+        ).annotate(
+            name=F('username')
+        ).values(
+            'name'
+        )
+
+    return HttpResponse(json.dumps(list(values)),
+                        content_type='application/json')
+
+
+def ticket_search(request, query):
+    if not query or len(query) < 3 or not query.isdigit():
+        values = []
+    else:
+        t = Record.objects.filter(ticket=int(query)).first()
+        values = t and [{'name': t.ticket}] or []
+
+    return HttpResponse(json.dumps(list(values)),
                         content_type='application/json')
