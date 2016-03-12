@@ -31,3 +31,8 @@ django-admin runserver 0.0.0.0:8001
 Create a team
 =======
 http://localhost:8001/admin/vtimecore/team/add/
+
+License
+-------
+
+The MIT License (MIT)
