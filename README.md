@@ -1,4 +1,4 @@
-Timesheet analytics tool
+IponWeb timesheet analytics tool
 =======
 
 This tool allows to analyze time spent by a team/user or how much time a ticket took.
