@@ -3,7 +3,7 @@ from collections import defaultdict
 from django.shortcuts import render
 import json
 
-from django.db.models import Q, F, Max, Min
+from django.db.models import Q, F
 from django.http import HttpResponse, Http404
 
 from vtimecore.models import Record, Team, WorkHours, User
@@ -97,7 +97,7 @@ def data_by_user(members, start_date, end_date):
 
     for x in data_by_user.values():
         x['spent_hours'] = round(x['spent_hours'], PRECISION)
-        x['tickets'] = [{'id': t, 'spent_hours': v}
+        x['tickets'] = [{'id': t, 'spent_hours': round(v, PRECISION)}
                         for t, v in sorted(x['time_by_ticket_hours'].items(),
                                            key=lambda x: x[1], reverse=True)]
 
@@ -127,7 +127,7 @@ def data_by_ticket(members, start_date, end_date):
 
     for x in data_by_ticket.values():
         x['spent_hours'] = round(x['spent_hours'], PRECISION)
-        x['users'] = [{'username': u, 'spent_hours': v}
+        x['users'] = [{'username': u, 'spent_hours': round(v, PRECISION)}
                       for u, v in sorted(x['time_by_user_hours'].items(),
                                          key=lambda x: x[1], reverse=True)]
 
