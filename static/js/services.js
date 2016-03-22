@@ -59,7 +59,7 @@
     function Settings($location) {
         var dates = {
             startDate: moment().weekday(-7).format("YYYY-MM-DD"),
-            endDate: window.MAXDATE
+            endDate: window.MAXDATE || moment().format("YYYY-MM-DD")
         };
         var urlParams = $location.search();
 

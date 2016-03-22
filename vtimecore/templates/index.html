@@ -1,3 +1,5 @@
+{% load compress %}
+
 <!DOCTYPE html>
 <html ng-app="timesheet" ng-strict-di>
 <head>
@@ -6,28 +8,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <base href="/">
     <title>Timesheet Analytics</title>
-    <link rel="stylesheet" href="static/css/vendors/bootstrap.min.css" />
-    <link rel="stylesheet" href="static/css/vendors/bootstrap-sticky-footer.css" />
-    <link rel="stylesheet" href="static/css/vendors/daterangepicker.css" />
-    <link rel="stylesheet" href="static/css/vendors/select.min.css" />
-    <link rel="stylesheet" href="static/css/custom.css" />
-
-    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
-    <link rel="stylesheet" href="http://fk.github.io/select2-bootstrap-css/css/select2-bootstrap.css">
-
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.2.0/jquery.min.js"></script>
-    <script src="static/js/vendors/angular.min.js"></script>
-
-    <script src="static/js/vendors/angular-route.min.js"></script>
-    <script src="static/js/vendors/angular-sanitize.min.js"></script>
-    <script src="static/js/vendors/bootstrap.min.js"></script>
-    <script src="static/js/vendors/moment.min.js"></script>
-    <script src="static/js/vendors/jquery.daterangepicker.js"></script>
-
-    <script src="static/js/vendors/lodash.min.js"></script>
-    <script src="static/js/vendors/highcharts.min.js"></script>
-    <script src="static/js/vendors/select.js"></script>
-
     <script>
         window.TEAMS = [
             {% for slug, name in teams %}
@@ -37,11 +17,39 @@
         window.MINDATE = "{{ min_date }}";
         window.MAXDATE = "{{ max_date }}";
     </script>
-    <script src="static/js/app.js"></script>
-    <script src="static/js/services.js"></script>
-    <script src="static/js/controllers.js"></script>
-    <script src="static/js/directives.js"></script>
-    <script src="static/js/tunes.js"></script>
+
+    <link rel="stylesheet" href="http://cdnjs.cloudflare.com/ajax/libs/select2/3.4.5/select2.css">
+
+    {% compress css %}
+        <link rel="stylesheet" href="/static/bootstrap/dist/css/bootstrap.min.css" type="text/css" charset="utf-8">
+        <link rel="stylesheet" href="/static/ui-select/dist/select.min.css" type="text/css" charset="utf-8">
+        <link rel="stylesheet" href="/static/select2-bootstrap-css/select2-bootstrap.min.css" type="text/css" charset="utf-8">
+        <link rel="stylesheet" href="/static/bootstrap-daterangepicker/daterangepicker.css" type="text/css" charset="utf-8">
+    {% endcompress %}
+    {% compress css %}
+        <link rel="stylesheet" href="/static/css/custom.css" type="text/css" charset="utf-8">
+    {% endcompress %}
+
+    {% compress js %}
+        <script src="/static/moment/min/moment.min.js"></script>
+        <script src="/static/jquery/dist/jquery.min.js"></script>
+        <script src="/static/lodash/lodash.min.js"></script>
+        <script src="/static/highcharts/highcharts.js"></script>
+        <script src="/static/bootstrap/dist/js/bootstrap.js"></script>
+        <script src="/static/angular/angular.min.js"></script>
+        <script src="/static/angular-route/angular-route.min.js"></script>
+        <script src="/static/angular-sanitize/angular-sanitize.min.js"></script>
+        <script src="/static/ui-select/dist/select.min.js"></script>
+        <script src="/static/bootstrap-daterangepicker/daterangepicker.js"></script>
+    {% endcompress %}
+
+    {% compress js %}
+        <script src="/static/js/app.js"></script>
+        <script src="/static/js/services.js"></script>
+        <script src="/static/js/controllers.js"></script>
+        <script src="/static/js/directives.js"></script>
+        <script src="/static/js/tunes.js"></script>
+    {% endcompress %}
 </head>
 <body ng-controller="BaseCtrl">
 
@@ -91,7 +99,9 @@
                                reset-search-input="true"
                                theme="select2"
                                style="width: 200px;">
-                        <ui-select-match placeholder="Ticket or user">{{$select.selected.name}}</ui-select-match>
+                        <ui-select-match placeholder="Ticket or user">
+                            {{ $select.selected.name }}
+                        </ui-select-match>
                         <ui-select-choices repeat="row in searchResults"
                                            refresh="search($select.search)"
                                            refresh-delay="0">

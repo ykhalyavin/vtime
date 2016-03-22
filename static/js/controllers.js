@@ -87,7 +87,8 @@
             // initialized yet, so we need to display something by default.
             $timeout(function () {
                 var l = $window.localStorage,
-                    t = l.teamSlug || _.first($scope.teamData).slug;
+                    firstTeam = _.first($scope.teamData) || {slug: undefined},
+                    t = l.teamSlug || firstTeam.slug;
 
                 if (next.scope === undefined && t) {
                     $location.path(
@@ -124,6 +125,7 @@
             }
         );
         $scope.$on('calendarChanged', function (e, data) {
+            console.log('xxx');
             get(data.startDate, data.endDate);
         });
 

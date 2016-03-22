@@ -3,3 +3,5 @@ db.sqlite3-journal
 .idea
 __pycache__/*
 *.pyc
+node_modules
+collected_static

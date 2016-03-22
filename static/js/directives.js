@@ -39,51 +39,54 @@
     function Calendar(Settings, $location) {
         return {
             restrict: 'A',
-            require : 'ngModel',
-            link: function(scope, element, attrs, ngModelCtrl) {
-                var dates = Settings.dates;
+            templateUrl: 'static/templates/snippets/calendar.html',
+            link: function(scope, element, attrs) {
+                var dates = Settings.dates,
+                    format = 'YYYY-MM-DD';
 
-                element.dateRangePicker(
-                {
-                    format: 'YYYY-MM-DD',
-                    startOfWeek: 'monday',
-                    autoClose: true,
-                    showShortcuts: true,
-                    separator: ' — ',
-                    shortcuts:
-                    {
-                        'prev': ['week', 'month'],
-                        'next-days': null,
-                        'next': null
-                    },
-                    getValue: function() {
-                        return this.innerHTML;
-                    },
-                    setValue: function(s) {
-                        this.innerHTML = s;
-                    },
-                    beforeShowDay: function(t) {
-                        var valid = (moment(t) >= moment(window.MINDATE) &&
-                                     moment(t) <= moment(window.MAXDATE));
-                        var _class = '';
-                        var _tooltip = valid ? '' : 'No records for this date';
-                        return [valid, _class, _tooltip];
-                    }
-                }).bind('datepicker-change', function(e, obj) {
-                    dates.startDate = moment(obj.date1).format('YYYY-MM-DD');
-                    dates.endDate = moment(obj.date2).format('YYYY-MM-DD');
+                function setDateRange(startDate, endDate) {
+                    scope.dateRange = startDate + ' — ' + endDate;
+                }
+
+                function cb(start, end) {
+                    setDateRange(start.format(format), end.format(format));
+
+                    dates.startDate = start.format(format);
+                    dates.endDate = end.format(format);
 
                     scope.$broadcast('calendarChanged', {
                         startDate: dates.startDate,
                         endDate: dates.endDate
                     });
+                    scope.$apply();
+                }
 
-                }).data().dateRangePicker.setDateRange(
-                    dates.startDate, dates.endDate
-                );
+                setDateRange(dates.startDate, dates.endDate);
+
+                element.daterangepicker({
+                    startDate: dates.startDate,
+                    endDate: dates.endDate,
+                    minDate: window.MINDATE,
+                    maxDate: window.MAXDATE,
+                    alwaysShowCalendars: true,
+                    autoApply: true,
+                    locale: {
+                        format: format,
+                        firstDay: 1
+                    },
+                    ranges: {
+                        'Today': [moment(), moment()],
+                        'Yesterday': [moment().subtract(1, 'days'), moment().subtract(1, 'days')],
+                        'Last 7 Days': [moment().subtract(6, 'days'), moment()],
+                        'Last 30 Days': [moment().subtract(29, 'days'), moment()],
+                        'This Month': [moment().startOf('month'), moment().endOf('month')],
+                        'Last Month': [moment().subtract(1, 'month').startOf('month'), moment().subtract(1, 'month').endOf('month')]
+                    }
+
+                }, cb);
 
                 scope.$on('datesChanged', function () {
-                    element.data('dateRangePicker').setDateRange(
+                    element.data('daterangepicker').setDateRange(
                         dates.startDate, dates.endDate);
                 });
             }
