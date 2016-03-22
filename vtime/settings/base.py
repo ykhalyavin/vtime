@@ -8,10 +8,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.7/ref/settings/
 """
 
-# Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 from os.path import expanduser
-import os
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+from pathlib import Path
+BASE_DIR = Path(__file__).parents[2]
 
 # XXX Temporary -- while local.conf is not created yet
 SHEETS_DIR = expanduser('~/iponweb/admin/timesheet')
@@ -65,7 +64,7 @@ WSGI_APPLICATION = 'vtime.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'NAME': str(BASE_DIR / 'db.sqlite3'),
     }
 }
 
@@ -82,15 +81,15 @@ USE_TZ = False
 
 STATIC_URL = '/static/'
 STATICFILES_DIRS = (
-    os.path.join(BASE_DIR, 'static'),
-    os.path.join(BASE_DIR, 'node_modules'),
+    str(BASE_DIR / 'static'),
+    str(BASE_DIR / 'node_modules'),
 )
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
     'compressor.finders.CompressorFinder',
 )
-STATIC_ROOT = os.path.join(BASE_DIR, 'collected_static')
+STATIC_ROOT = str(BASE_DIR / 'collected_static')
 
 TEMPLATES = [
     {
