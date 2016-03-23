@@ -72,3 +72,8 @@ a.pseudo {
     font-size: 18px;
     vertical-align: middle;
 }
+
+.vtime-calendar {
+    min-width: 230px;
+    min-height: 34px;
+}
