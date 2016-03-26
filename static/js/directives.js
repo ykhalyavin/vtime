@@ -89,8 +89,10 @@
                 }, cb);
 
                 scope.$on('datesChanged', function () {
-                    element.data('daterangepicker').setDateRange(
-                        dates.startDate, dates.endDate);
+                    var drp = element.data('daterangepicker');
+                    drp.setStartDate(dates.startDate);
+                    drp.setEndDate(dates.endDate);
+                    setDateRange(dates.startDate, dates.endDate);
                 });
             }
         };
