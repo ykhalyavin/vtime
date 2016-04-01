@@ -7,10 +7,9 @@
         Ticket &#8220;{{ ctrl.objId }}&#8221;
         <a href="https://iponweb.net/rt/Ticket/Display.html?id={{ ctrl.objId }}"
            target="_blank">RT</a>
-        <span class="grey font-18px">(total: {{ ctrl.spent_hours }} hour(s))</span>
     </h3>
     <span class="grey" ng-show="ctrl.workhours">
-        Total working hours in {{ startDateStr }}: {{ ctrl.workhours }}
+        Spent {{ ctrl.spent_hours }} hours ({{ ctrl.workhours }} working hours in {{ startDateStr }})
     <span>
 </div>
 <div>
