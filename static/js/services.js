@@ -5,7 +5,7 @@
 
     app.service('Settings', ['$location', Settings]);
     app.factory('GetFactory', ['$http', GetFactory]);
-    app.factory('SearchFactory', ['$http', SearchFactory]);
+    app.factory('SearchFactory', ['$http', '$q', SearchFactory]);
     app.factory('BuildPlotConf', BuildPlotConf);
     app.factory('TeamViewData', TeamViewData);
 
@@ -93,9 +93,13 @@
         };
     }
 
-    function SearchFactory($http) {
+    function SearchFactory($http, $q) {
         return function(callback) {
             return function (query) {
+                if (query === '') {
+                    return $q.resolve([]);
+                }
+
                 var url = '/api/user_search/';
 
                 if (query.match(/^\d+$/)) { // ticket, no search
