@@ -20,4 +20,4 @@ DATABASES = {
     }
 }
 
-SHEETS_DIR = os.environ.get('VTIME_SHEETS_DIR', SHEETS_DIR)
+SHEETS_DIR = os.environ.get('VTIME_SHEETS_DIR', SHEETS_DIR)  # NOQA

@@ -1,13 +1,13 @@
-from datetime import datetime
-from collections import defaultdict
-from django.shortcuts import render
 import json
+from collections import defaultdict
+from datetime import datetime
 
-from django.db.models import Q, F
-from django.http import HttpResponse, Http404
+from django.db.models import F, Q
+from django.http import Http404, HttpResponse
+from django.shortcuts import render
 
-from vtimecore.models import Record, Team, WorkHours, User
 from vtimecore.forms import ByTeamForm, ByTicketForm, ByUserForm
+from vtimecore.models import Record, Team, User, WorkHours
 
 
 PRECISION = 2
