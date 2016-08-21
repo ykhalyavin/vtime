@@ -15,7 +15,7 @@
 
     function BaseCtrl(Settings, SearchFactory, $scope, $location, $timeout,
                       $window) {
-        // Angular is loaded, now we can show content
+        // Angular is loaded, now we can show the content
         document.getElementsByTagName('body')[0].classList.remove('invisible');
 
         $scope.viewData = [{slug: 'users', name: 'Users'},
