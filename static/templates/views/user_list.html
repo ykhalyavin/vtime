@@ -3,7 +3,7 @@
 </script>
 
 <script type="text/ng-template" id="users_table_tickets_column">
-    <div class="expandable-target">
+    <div ng-if="!$ctrl.isExpanded[rowIndex]">
         <div class="pull-left">
             <ul class="list-inline">
                 <li ng-repeat="item in rec[col.name] | limitTo: 5">
@@ -13,17 +13,17 @@
             </ul>
         </div>
         <div class="pull-right">
-            <button ng-click="toggleExpand('expand', $event)"
+            <button ng-click="$ctrl.toggleExpand(rowIndex)"
                     class="btn btn-default btn-xs">Expand</button>
         </div>
     </div>
-    <div class="expandable-target">
+    <div ng-if="$ctrl.isExpanded[rowIndex]">
         <p ng-repeat="item in rec[col.name]">
             <a href="ticket/{{ item.id }}/">#{{ item.id }}</a> |
             <a href="https://iponweb.net/rt/Ticket/Display.html?id={{ item.id }}"
                target="_blank">RT</a> {{ item.spent_hours }} hour(s)
 
-            <button ng-if="$first" ng-click="toggleExpand('collapse', $event)"
+            <button ng-if="$first" ng-click="$ctrl.toggleExpand(rowIndex)"
                     class="pull-right btn btn-default btn-xs">Collapse</button>
         </p>
     </div>
@@ -34,7 +34,7 @@
     <h3>{{ viewName }} of &#8220;{{ teamName }}&#8221; team</h3>
     <span class="grey" ng-show="ctrl.workhours">
         Total working hours in {{ startDateStr }}: {{ ctrl.workhours }}
-    <span>
+    </span>
 </div>
 
 

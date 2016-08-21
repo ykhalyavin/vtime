@@ -7,10 +7,6 @@ body > .container {
     padding-bottom: 60px;
 }
 
-* + .expandable-target {
-    display: none;
-}
-
 .sorticon {
     width: 20px;
     opacity: 0;

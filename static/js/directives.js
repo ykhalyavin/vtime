@@ -1,39 +1,40 @@
 (function() {
     'use strict';
 
-    var path = 'mocks/';
-
     angular.module('timesheet')
         .directive('calendar', ['Settings', '$location', Calendar])
-        .directive('sortableTable', SortableTable)
-        .directive('highchartsPlot', HighchartsPlot);
+        .directive('highchartsPlot', HighchartsPlot)
+        .component('sortableTable', SortableTable());
+
 
     function SortableTable() {
         return {
-            restrict: 'E',
-            scope: {
-                columns: '=',
-                tableData: '=',
+            bindings: {
+                columns: '<',
+                tableData: '<',
                 sortColumn: '@',
-                sortDesc: '='
+                sortDesc: '<'
             },
             templateUrl: 'static/templates/snippets/sortable-table.html',
-            link: function(scope, element, attrs) {
-                scope.sort = function (columnName) {
-                    if (columnName == scope.sortColumn) {
-                        scope.sortDesc = !scope.sortDesc;
+            controller: function () {
+                var ctrl = this;
+
+                ctrl.isExpanded = {};
+
+                ctrl.sort = function (columnName) {
+                    if (columnName === ctrl.sortColumn) {
+                        ctrl.sortDesc = !ctrl.sortDesc;
                     } else {
-                        scope.sortColumn = columnName;
-                        scope.sortDesc = false;
+                        ctrl.sortColumn = columnName;
+                        ctrl.sortDesc = false;
                     }
                 };
 
-                scope.toggleExpand = function(direction, e) {
-                    var $e = $(e.target).closest('.expandable-target');
-                    $e.hide().siblings().show();
+                ctrl.toggleExpand = function (rowIndex) {
+                    ctrl.isExpanded[rowIndex] = !ctrl.isExpanded[rowIndex];
                 };
             }
-        };
+        }
     }
 
     function Calendar(Settings, $location) {
@@ -101,7 +102,7 @@
     function HighchartsPlot() {
         return {
             scope: {
-                params: '='
+                params: '<'
             },
             link: function(scope, element) {
                 scope.$watch('params', function(value) {

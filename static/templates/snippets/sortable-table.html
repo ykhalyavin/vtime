@@ -1,17 +1,17 @@
 <table class="table">
     <thead>
-        <th ng-repeat="col in columns">
+        <th ng-repeat="col in $ctrl.columns">
             <a class="pseudo pseudo__disabled-pointer"
-               ng-click="sort(col.name)">{{ col.desc }}</a>
+               ng-click="$ctrl.sort(col.name)">{{ col.desc }}</a>
             <span class="glyphicon sorticon"
                   aria-hidden="true"
-                  ng-class="{'glyphicon-sort-by-attributes': col.name === sortColumn,
-                             'glyphicon-sort-by-attributes-alt': sortDesc}"></span>
+                  ng-class="{'glyphicon-sort-by-attributes': col.name === $ctrl.sortColumn,
+                             'glyphicon-sort-by-attributes-alt': $ctrl.sortDesc}"></span>
         </td>
     </thead>
     <tbody>
-        <tr ng-repeat="rec in tableData | orderBy:sortColumn:sortDesc">
-            <td ng-repeat="col in columns">
+        <tr ng-repeat="(rowIndex, rec) in $ctrl.tableData | orderBy:$ctrl.sortColumn:$ctrl.sortDesc">
+            <td ng-repeat="col in $ctrl.columns">
                 <span ng-switch="col.template">
                     <span ng-switch-when="undefined">{{ rec[col.name] }}</span>
                     <span ng-switch-default>
