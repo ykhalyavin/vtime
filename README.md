@@ -10,7 +10,7 @@ Ticket view:
 ![ticket](https://cloud.githubusercontent.com/assets/477081/13723008/c3d30e5e-e868-11e5-9f34-9e270ca0f9f3.png)
 
 Team users view:
-![team-users] (https://cloud.githubusercontent.com/assets/477081/13722969/8dfab72e-e867-11e5-8efc-563ef8708511.png)
+![team-users](https://cloud.githubusercontent.com/assets/477081/13722969/8dfab72e-e867-11e5-8efc-563ef8708511.png)
 
 Team tickets view:
 ![team-tickets](https://cloud.githubusercontent.com/assets/477081/13723009/c3d58b20-e868-11e5-99ef-49e32a096792.png)
